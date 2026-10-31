@@ -39,6 +39,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.duhaoze.standby.BuildConfig
 
 @Composable
 fun PrivacyGate(onAccept: () -> Unit, onDecline: () -> Unit) {
@@ -207,7 +208,7 @@ fun PolicyScreen(onBack: () -> Unit, onRevokeAndClear: () -> Unit) {
                     )
                     Spacer(Modifier.height(6.dp))
                     Text(
-                        text = "生效日期：2026 年 10 月 31 日  ·  版本 1.0.0",
+                        text = "生效日期：2026 年 10 月 31 日  ·  应用版本 ${BuildConfig.VERSION_NAME}",
                         color = colors.tertiary,
                         fontSize = 10.sp,
                         letterSpacing = 0.5.sp

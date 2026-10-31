@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.duhaoze.standby.data.ClockStyle
 import com.duhaoze.standby.data.WeatherKind
 import com.duhaoze.standby.data.formatClock
 import java.time.LocalDateTime
@@ -83,8 +84,10 @@ fun BrandMark(compact: Boolean = false) {
 @Composable
 fun ClockPanel(
     now: LocalDateTime,
+    clockStyle: ClockStyle,
     use24Hour: Boolean,
     showSeconds: Boolean,
+    analogShowSeconds: Boolean,
     landscape: Boolean,
     modifier: Modifier = Modifier
 ) {
@@ -98,10 +101,7 @@ fun ClockPanel(
         hour > 12 -> "%d:%02d".format(hour - 12, minute)
         else -> "%d:%02d".format(hour, minute)
     }
-    val amPm = when {
-        hour < 12 -> "AM"
-        else -> "PM"
-    }
+    val amPm = if (hour < 12) "AM" else "PM"
     val date = now.format(DateTimeFormatter.ofPattern("M月d日", Locale.SIMPLIFIED_CHINESE))
     val weekday = now.format(DateTimeFormatter.ofPattern("EEEE", Locale.SIMPLIFIED_CHINESE))
     val year = now.format(DateTimeFormatter.ofPattern("yyyy", Locale.US))
@@ -116,7 +116,11 @@ fun ClockPanel(
         }
         val fontSize = rough.coerceIn(64f, 210f).sp
         val sideSize = (fontSize.value * 0.19f).coerceIn(14f, 38f).sp
-        val dateSize = (fontSize.value * 0.115f).coerceIn(12f, 20f).sp
+        val dateSize = if (clockStyle == ClockStyle.ANALOG) {
+            if (landscape) 11.sp else 12.sp
+        } else {
+            (fontSize.value * 0.115f).coerceIn(12f, 20f).sp
+        }
 
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -144,61 +148,177 @@ fun ClockPanel(
                 )
             }
             Spacer(Modifier.height(if (landscape) 8.dp else 6.dp))
-            Row(verticalAlignment = Alignment.Bottom) {
-                Text(
-                    text = main,
-                    color = colors.primary,
-                    style = TextStyle(
-                        fontSize = fontSize,
-                        lineHeight = (fontSize.value * 0.82f).sp,
-                        fontWeight = FontWeight.Thin,
-                        fontFamily = FontFamily.SansSerif,
-                        letterSpacing = (-fontSize.value * 0.028f).sp,
-                    ),
-                    maxLines = 1,
-                    softWrap = false
-                )
-                if (showSeconds || !use24Hour) {
-                    Column(
-                        modifier = Modifier.padding(start = 8.dp, bottom = (fontSize.value * 0.10f).dp)
-                    ) {
-                        if (!use24Hour) {
-                            Text(
-                                text = amPm,
-                                color = colors.accent,
-                                fontSize = sideSize,
-                                fontWeight = FontWeight.SemiBold,
-                                letterSpacing = 1.sp
+
+            if (clockStyle == ClockStyle.ANALOG) {
+                val dialSize = minOf(width * 0.88f, height * 0.86f)
+                    .coerceIn(120f, 340f).dp
+                Box(
+                    modifier = Modifier.fillMaxWidth().weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    AnalogClockDial(
+                        now = now,
+                        showSeconds = analogShowSeconds,
+                        modifier = Modifier.size(dialSize)
+                    )
+                }
+            } else {
+                Row(verticalAlignment = Alignment.Bottom) {
+                    Text(
+                        text = main,
+                        color = colors.primary,
+                        style = TextStyle(
+                            fontSize = fontSize,
+                            lineHeight = (fontSize.value * 0.82f).sp,
+                            fontWeight = FontWeight.Thin,
+                            fontFamily = FontFamily.SansSerif,
+                            letterSpacing = (-fontSize.value * 0.028f).sp,
+                        ),
+                        maxLines = 1,
+                        softWrap = false
+                    )
+                    if (showSeconds || !use24Hour) {
+                        Column(
+                            modifier = Modifier.padding(
+                                start = 8.dp,
+                                bottom = (fontSize.value * 0.10f).dp
                             )
-                        }
-                        if (showSeconds) {
-                            Text(
-                                text = ":%02d".format(second),
-                                color = colors.secondary,
-                                fontSize = sideSize,
-                                fontWeight = FontWeight.Light,
-                            )
+                        ) {
+                            if (!use24Hour) {
+                                Text(
+                                    text = amPm,
+                                    color = colors.accent,
+                                    fontSize = sideSize,
+                                    fontWeight = FontWeight.SemiBold,
+                                    letterSpacing = 1.sp
+                                )
+                            }
+                            if (showSeconds) {
+                                Text(
+                                    text = ":%02d".format(second),
+                                    color = colors.secondary,
+                                    fontSize = sideSize,
+                                    fontWeight = FontWeight.Light,
+                                )
+                            }
                         }
                     }
                 }
-            }
-            Spacer(Modifier.height(if (landscape) 12.dp else 8.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    Modifier
-                        .width(if (landscape) 34.dp else 26.dp)
-                        .height(1.dp)
-                        .background(colors.accent)
-                )
-                Spacer(Modifier.width(10.dp))
-                Text(
-                    text = if (use24Hour) "24 小时制" else "12 小时制",
-                    color = colors.tertiary,
-                    fontSize = 10.sp,
-                    letterSpacing = 1.6.sp
+                Spacer(Modifier.height(if (landscape) 12.dp else 8.dp))
+                ClockCaption(
+                    label = if (use24Hour) "24 小时制" else "12 小时制",
+                    lineWidth = if (landscape) 34.dp else 26.dp
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun ClockCaption(label: String, lineWidth: Dp = 28.dp) {
+    val colors = LocalStandbyColors.current
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            Modifier
+                .width(lineWidth)
+                .height(1.dp)
+                .background(colors.accent)
+        )
+        Spacer(Modifier.width(10.dp))
+        Text(
+            text = label,
+            color = colors.tertiary,
+            fontSize = 10.sp,
+            letterSpacing = 1.6.sp
+        )
+    }
+}
+
+@Composable
+fun AnalogClockDial(
+    now: LocalDateTime,
+    showSeconds: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val colors = LocalStandbyColors.current
+    Canvas(modifier) {
+        val s = size.minDimension
+        val c = center
+        val r = (s / 2f) - 6.dp.toPx()
+        val hairline = 1.dp.toPx()
+
+        drawCircle(colors.lineStrong, r, c, style = Stroke(width = hairline))
+        drawCircle(colors.line, r * 0.925f, c, style = Stroke(width = hairline * 0.55f))
+
+        repeat(60) { index ->
+            val angle = (Math.PI * 2.0 * index / 60.0) - Math.PI / 2.0
+            val major = index % 5 == 0
+            val quarter = index % 15 == 0
+            val inner = r * if (major) 0.835f else 0.895f
+            val outer = r * 0.955f
+            val start = Offset(
+                c.x + (cos(angle) * inner).toFloat(),
+                c.y + (sin(angle) * inner).toFloat()
+            )
+            val end = Offset(
+                c.x + (cos(angle) * outer).toFloat(),
+                c.y + (sin(angle) * outer).toFloat()
+            )
+            val tickColor = when {
+                index == 0 -> colors.accent
+                major -> colors.primary
+                else -> colors.secondary.copy(alpha = 0.5f)
+            }
+            drawLine(
+                color = tickColor,
+                start = start,
+                end = end,
+                strokeWidth = when {
+                    quarter -> hairline * 1.6f
+                    major -> hairline * 1.2f
+                    else -> hairline * 0.65f
+                },
+                cap = StrokeCap.Round
+            )
+        }
+
+        val hourAngle = ((now.hour % 12) + now.minute / 60f) * 30f
+        val minuteAngle = (now.minute + if (showSeconds) now.second / 60f else 0f) * 6f
+        val secondAngle = now.second * 6f
+
+        rotate(hourAngle, pivot = c) {
+            drawLine(
+                color = colors.primary,
+                start = Offset(c.x, c.y + r * 0.05f),
+                end = Offset(c.x, c.y - r * 0.43f),
+                strokeWidth = r * 0.042f,
+                cap = StrokeCap.Round
+            )
+        }
+        rotate(minuteAngle, pivot = c) {
+            drawLine(
+                color = colors.primary,
+                start = Offset(c.x, c.y + r * 0.10f),
+                end = Offset(c.x, c.y - r * 0.64f),
+                strokeWidth = r * 0.026f,
+                cap = StrokeCap.Round
+            )
+        }
+        if (showSeconds) {
+            rotate(secondAngle, pivot = c) {
+                drawLine(
+                    color = colors.accent,
+                    start = Offset(c.x, c.y + r * 0.15f),
+                    end = Offset(c.x, c.y - r * 0.76f),
+                    strokeWidth = r * 0.009f,
+                    cap = StrokeCap.Round
+                )
+            }
+        }
+
+        drawCircle(colors.primary, r * 0.038f, c)
+        drawCircle(colors.background, r * 0.020f, c)
+        drawCircle(colors.accent, r * 0.013f, c)
     }
 }
 

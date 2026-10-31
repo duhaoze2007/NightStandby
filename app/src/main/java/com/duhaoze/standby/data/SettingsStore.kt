@@ -31,8 +31,13 @@ class SettingsStore(context: Context) {
 
     private fun load(): Settings = Settings(
         privacyAccepted = prefs.getBoolean("privacy_accepted", false),
+        clockStyle = when (prefs.getString("clock_style", "DIGITAL")) {
+            "ANALOG" -> ClockStyle.ANALOG
+            else -> ClockStyle.DIGITAL
+        },
         use24Hour = prefs.getBoolean("use_24_hour", true),
         showSeconds = prefs.getBoolean("show_seconds", false),
+        analogShowSeconds = prefs.getBoolean("analog_show_seconds", false),
         dimDelaySec = prefs.getInt("dim_delay_sec", 60),
         autoRed = prefs.getBoolean("auto_red", true),
         forceRed = prefs.getBoolean("force_red", false),
@@ -47,8 +52,10 @@ class SettingsStore(context: Context) {
     private fun save(s: Settings) {
         prefs.edit()
             .putBoolean("privacy_accepted", s.privacyAccepted)
+            .putString("clock_style", s.clockStyle.name)
             .putBoolean("use_24_hour", s.use24Hour)
             .putBoolean("show_seconds", s.showSeconds)
+            .putBoolean("analog_show_seconds", s.analogShowSeconds)
             .putInt("dim_delay_sec", s.dimDelaySec)
             .putBoolean("auto_red", s.autoRed)
             .putBoolean("force_red", s.forceRed)

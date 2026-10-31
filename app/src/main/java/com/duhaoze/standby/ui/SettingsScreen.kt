@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.sp
 import com.duhaoze.standby.BuildConfig
 import com.duhaoze.standby.StandbyViewModel
 import com.duhaoze.standby.data.AgendaState
+import com.duhaoze.standby.data.ClockStyle
 import com.duhaoze.standby.data.MediaState
 import com.duhaoze.standby.data.Settings
 import com.duhaoze.standby.data.WeatherState
@@ -121,11 +122,11 @@ fun SettingsScreen(
                 contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 56.dp),
                 verticalArrangement = Arrangement.spacedBy(0.dp)
             ) {
-                item { SettingsSection("显示") }
+                item { SettingsSection("时钟与显示") }
                 item {
                     ToggleRow(
                         title = "24 小时制",
-                        subtitle = "大时钟与所有时间显示",
+                        subtitle = "数字时钟与日程的时间格式",
                         checked = settings.use24Hour,
                         onToggle = { value ->
                             viewModel.settings.update { it.copy(use24Hour = value) }
@@ -133,14 +134,48 @@ fun SettingsScreen(
                     )
                 }
                 item {
-                    ToggleRow(
-                        title = "显示秒",
-                        subtitle = "关闭时对齐分钟刷新，更省电",
-                        checked = settings.showSeconds,
-                        onToggle = { value ->
-                            viewModel.settings.update { it.copy(showSeconds = value) }
+                    SettingBlock(
+                        title = "时钟样式",
+                        subtitle = "数字大字时钟，或极简 12 小时模拟表盘"
+                    ) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            ChoiceChip(
+                                text = "数字时钟",
+                                selected = settings.clockStyle == ClockStyle.DIGITAL,
+                                onClick = {
+                                    viewModel.settings.update { it.copy(clockStyle = ClockStyle.DIGITAL) }
+                                }
+                            )
+                            ChoiceChip(
+                                text = "模拟时钟",
+                                selected = settings.clockStyle == ClockStyle.ANALOG,
+                                onClick = {
+                                    viewModel.settings.update { it.copy(clockStyle = ClockStyle.ANALOG) }
+                                }
+                            )
                         }
-                    )
+                    }
+                }
+                item {
+                    if (settings.clockStyle == ClockStyle.ANALOG) {
+                        ToggleRow(
+                            title = "模拟时钟秒针",
+                            subtitle = "关闭时按分钟刷新；开启后每秒走针，略增耗电",
+                            checked = settings.analogShowSeconds,
+                            onToggle = { value ->
+                                viewModel.settings.update { it.copy(analogShowSeconds = value) }
+                            }
+                        )
+                    } else {
+                        ToggleRow(
+                            title = "数字时钟显示秒",
+                            subtitle = "关闭时对齐分钟刷新，更省电",
+                            checked = settings.showSeconds,
+                            onToggle = { value ->
+                                viewModel.settings.update { it.copy(showSeconds = value) }
+                            }
+                        )
+                    }
                 }
                 item {
                     ToggleRow(

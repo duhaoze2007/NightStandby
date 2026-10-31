@@ -211,12 +211,23 @@ private fun StandbyHome(viewModel: StandbyViewModel, settings: Settings) {
         }
     }
 
-    // 时钟节奏：秒针开启时才逐秒刷新，否则对齐到分钟，减少唤醒。
-    LaunchedEffect(screen, dimmed, settings.showSeconds, resumed) {
+    // 时钟节奏：数字秒或模拟秒针开启时才逐秒刷新，否则对齐到分钟，减少唤醒。
+    LaunchedEffect(
+        screen,
+        dimmed,
+        settings.clockStyle,
+        settings.showSeconds,
+        settings.analogShowSeconds,
+        resumed
+    ) {
         if (screen == "main" && !dimmed && resumed) {
+            val tickSeconds = when (settings.clockStyle) {
+                com.duhaoze.standby.data.ClockStyle.DIGITAL -> settings.showSeconds
+                com.duhaoze.standby.data.ClockStyle.ANALOG -> settings.analogShowSeconds
+            }
             while (true) {
                 now = LocalDateTime.now()
-                if (settings.showSeconds) {
+                if (tickSeconds) {
                     val ms = System.currentTimeMillis()
                     delay((1000 - ms % 1000).coerceAtLeast(120))
                 } else {
@@ -518,8 +529,10 @@ private fun MainContent(
                     Column(Modifier.weight(1.13f).fillMaxHeight()) {
                         ClockPanel(
                             now = now,
+                            clockStyle = settings.clockStyle,
                             use24Hour = settings.use24Hour,
                             showSeconds = settings.showSeconds,
+                            analogShowSeconds = settings.analogShowSeconds,
                             landscape = true,
                             modifier = Modifier.weight(1f).fillMaxWidth()
                         )
@@ -569,8 +582,10 @@ private fun MainContent(
                 Column(Modifier.fillMaxSize()) {
                     ClockPanel(
                         now = now,
+                        clockStyle = settings.clockStyle,
                         use24Hour = settings.use24Hour,
                         showSeconds = settings.showSeconds,
+                        analogShowSeconds = settings.analogShowSeconds,
                         landscape = false,
                         modifier = Modifier.weight(1.0f).fillMaxWidth()
                     )

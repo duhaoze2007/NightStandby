@@ -5,10 +5,16 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 
+enum class ClockStyle {
+    DIGITAL, ANALOG
+}
+
 data class Settings(
     val privacyAccepted: Boolean = false,
+    val clockStyle: ClockStyle = ClockStyle.DIGITAL,
     val use24Hour: Boolean = true,
     val showSeconds: Boolean = false,
+    val analogShowSeconds: Boolean = false,
     val dimDelaySec: Int = 60,
     val autoRed: Boolean = true,
     val forceRed: Boolean = false,
