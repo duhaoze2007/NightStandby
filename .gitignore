@@ -6,3 +6,7 @@ local.properties
 *.iml
 .DS_Store
 dist/*.apk
+signing/
+*.jks
+*.keystore
+keystore.properties

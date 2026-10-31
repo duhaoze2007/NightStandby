@@ -20,7 +20,7 @@
 ## 安装（已连接 ADB 的小米 17 Pro）
 
 ```bash
-adb install -r dist/Standby-1.0.0.apk
+adb install -r dist/NightStandby-1.0.0.apk
 ```
 
 首次打开：阅读并同意隐私政策。然后点右上角齿轮：
@@ -35,12 +35,28 @@ adb install -r dist/Standby-1.0.0.apk
 
 环境：macOS、JDK 17、Android SDK Platform 36 / Build Tools 36.0.0。
 
+正式发布包使用独立 release 证书签名，证书和口令不进入 Git：
+
+```properties
+# signing/keystore.properties
+storeFile=signing/nightstandby-release.jks
+storePassword=...
+keyAlias=nightstandby
+keyPassword=...
+```
+
 ```bash
 export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-17.jdk/Contents/Home
 ./gradlew :app:assembleRelease
 ```
 
 产物：`app/build/outputs/apk/release/app-release.apk`。
+
+如果没有 `signing/keystore.properties`，Gradle 会构建未签名的 release APK，方便第三方使用自己的证书签名。官方发布的 APK 使用 `CN=NightStandby` 证书。
+
+## 下载
+
+GitHub Releases：<https://github.com/duhaoze2007/NightStandby/releases/latest>
 
 ## 联网与权限边界
 
