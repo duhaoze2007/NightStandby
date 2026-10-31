@@ -1,0 +1,1 @@
+-keep class com.duhaoze.standby.media.MediaListenerService { *; }
